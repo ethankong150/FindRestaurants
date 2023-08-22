@@ -1,0 +1,23 @@
+GET http://localhost:8080/
+
+###writing tests here for restaurants
+GET http://localhost:8080/restaurants/5 
+Content-Type: application/json
+
+###
+PUT http://localhost:8080/restaurants/grade/
+Content-Type: application/json
+
+{
+    "params": { "restaurant_name": "Isle Of Capri Resturant",
+                "grade": "A"}
+}
+
+###
+GET http://localhost:8080/restaurants/4
+Content-Type: application/json
+
+{
+    "query": { "borough": "Bronx",
+                "cuisine": "American"}
+}

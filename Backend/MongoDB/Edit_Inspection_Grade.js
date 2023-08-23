@@ -4,7 +4,7 @@ function Edit_Inspection_Grade(restaurant_name, grade) {
   
   return new Promise((resolve, reject) => {
     const url = process.env.URL
-    const dbName = 'new_york';
+    const dbName = 'new_york'
     const client = new MongoClient(url)
 
     client.connect(url)
@@ -24,8 +24,8 @@ function Edit_Inspection_Grade(restaurant_name, grade) {
         collection.updateOne(filter, update)
           .then(result => {
             // console.log('Document updated:', result)
-            client.close();
-            resolve(result);
+            client.close()
+            resolve(result)
           })
           .catch(err => {
             console.error('Error updating document:', err)

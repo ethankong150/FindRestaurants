@@ -4,7 +4,6 @@ const MongoClient = require('mongodb').MongoClient;
 function Retrieve_Top_Restaurants(num_restaurants, borough, cuisine) {
   return new Promise((resolve, reject) => {
 
-    // const url = "mongodb://localhost:27017"
     const url =  process.env.URL
     const dbName = 'new_york'
     const client = new MongoClient(url)
@@ -12,41 +11,53 @@ function Retrieve_Top_Restaurants(num_restaurants, borough, cuisine) {
       .then(client => {
         console.log('Connected to MongoDB')
 
-        const db = client.db(dbName);
+        const db = client.db(dbName)
         const collection = db.collection('restaurants')
 
         const aggregationPipeline = [
-            {
-              $unwind: "$grades"
-            },
-            {
-              $group: {
-                _id: "$restaurant_id",
-                name: { $first: "$name" },
-                averageScore: { $avg: "$grades.score" },
-                borough: { $first: "$borough"},
-                cuisine: { $first: "$cuisine"}
-              }
-            },
-            {
-              $sort: { averageScore: -1 }
-            },
-            {
-              $limit: Number(num_restaurants)
+          {
+            $unwind: "$grades"
+          },
+          {
+            $group: {
+              _id: "$restaurant_id",
+              name: { $first: "$name" },
+              averageScore: { $avg: "$grades.score" },
+              borough: { $first: "$borough" },
+              cuisine: { $first: "$cuisine" },
+              totalGrades: { $sum: 1 }
             }
-          ]
-
-          if (borough !== undefined) {
-            aggregationPipeline.unshift({
-              $match: { "borough": borough }
-            })
+          },
+          {
+            $match: {
+              totalGrades: { $gte: 5 }
+            }
+          },
+          {
+            $addFields: {
+              averageScore: { $round: ["$averageScore", 2] }
+            }
+          },
+          {
+            $sort: { averageScore: -1 }
+          },
+          {
+            $limit: Number(num_restaurants)
           }
+        ]
+        
+        
+        if (borough !== undefined) {
+          aggregationPipeline.unshift({
+          $match: { "borough": borough }
+          })
+        }
           
-          if (cuisine !== undefined) {
-            aggregationPipeline.unshift({
-              $match: { "cuisine": cuisine }
-            })
-          }
+        if (cuisine !== undefined) {
+          aggregationPipeline.unshift({
+          $match: { "cuisine": cuisine }
+          })
+        }
 
         collection.aggregate(aggregationPipeline).toArray()
           .then(results => {
@@ -57,13 +68,13 @@ function Retrieve_Top_Restaurants(num_restaurants, borough, cuisine) {
             console.error('Error aggregating data:', err)
             client.close()
             reject(err)
-          });
+          })
       })
       .catch(err => {
-        console.error('Error connecting to MongoDB:', err);
-        reject(err); // Reject the promise with the error
-      });
-  });
+        console.error('Error connecting to MongoDB:', err)
+        reject(err)
+      })
+  })
 }
 
 module.exports = Retrieve_Top_Restaurants;
